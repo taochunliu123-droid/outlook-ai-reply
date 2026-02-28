@@ -146,6 +146,25 @@
       color: var(--accent); font-weight: 600;
     }
 
+    /* Length Bar */
+    .length-bar {
+      display: flex; border-radius: 10px; overflow: hidden;
+      border: 1px solid var(--border); background: var(--bg-card);
+    }
+    .length-seg {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 8px 4px; cursor: pointer; transition: all 0.2s;
+      border-right: 1px solid var(--border); position: relative;
+    }
+    .length-seg:last-child { border-right: none; }
+    .length-seg .seg-emoji { font-size: 14px; }
+    .length-seg .seg-label { font-size: 12px; font-weight: 500; margin-top: 1px; }
+    .length-seg .seg-desc { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+    .length-seg.active {
+      background: var(--accent-dim); color: var(--accent);
+    }
+    .length-seg.active .seg-desc { color: var(--accent); opacity: 0.7; }
+
     /* Email Preview */
     .email-preview {
       background: var(--bg-card); border-radius: 10px;
@@ -309,6 +328,12 @@
       <div class="tone-chips" id="toneChips"></div>
     </div>
 
+    <!-- Length -->
+    <div class="form-group">
+      <label class="form-label" id="lengthLabel">📏 回覆長度</label>
+      <div class="length-bar" id="lengthBar"></div>
+    </div>
+
     <!-- Generate -->
     <button class="btn btn-generate" id="generateBtn" onclick="generateReply()">
       🚀 產生回覆
@@ -353,16 +378,23 @@ const TONES = {
   diplomatic: { zh:'圓融外交', en:'Diplomatic', emoji:'🕊️' }
 };
 
+const LENGTHS = {
+  short:  { zh:'短', en:'Short',  emoji:'🔹', desc_zh:'3-5 句，直接切入重點', desc_en:'3-5 sentences, straight to the point' },
+  medium: { zh:'中', en:'Medium', emoji:'🔸', desc_zh:'1-2 段，適度說明',      desc_en:'1-2 paragraphs, moderate detail' },
+  long:   { zh:'長', en:'Long',   emoji:'🔶', desc_zh:'完整詳細，逐點回應',    desc_en:'Full detail, address each point' }
+};
+
 let state = {
   keys: JSON.parse(localStorage.getItem('outlook-ai-keys') || '{}'),
   activeProvider: 'anthropic',
   lang: 'zh',
   tone: 'professional',
+  replyLength: 'short',
   emailContent: '',
   showSettings: true,
   loading: false,
-  mode: 'unknown',       // 'read' or 'compose'
-  lastReplyText: ''       // 儲存最後產生的回覆，用於插入
+  mode: 'unknown',
+  lastReplyText: ''
 };
 
 // ============================================================
@@ -507,40 +539,47 @@ function refreshEmail() { detectMode(); }
 // ============================================================
 function buildSystemPrompt() {
   const toneLabel = state.lang === 'zh' ? TONES[state.tone].zh : TONES[state.tone].en;
+  const lenData = LENGTHS[state.replyLength];
+  const lenLabel = state.lang === 'zh' ? lenData.desc_zh : lenData.desc_en;
+
   if (state.lang === 'zh') {
     return `你是一位專業的企業郵件回覆助手。請分析以下來信內容，理解對方的問題和需求，然後用「${toneLabel}」的語氣，以繁體中文撰寫一封回覆郵件。
 
+⚠️ 長度要求：${lenLabel}。嚴格遵守此長度限制，回覆郵件正文不可超過此範圍。
+
 規則：
-1. 先簡要摘要來信重點（2-3 句）
-2. 識別需要回應的關鍵問題
-3. 撰寫完整的回覆郵件（包含稱呼、正文、結尾）
+1. 先用 1 句話摘要來信重點
+2. 識別需要回應的關鍵問題（簡短列出）
+3. 撰寫回覆郵件（包含稱呼、正文、結尾），長度嚴格控制在「${lenData.zh}」
 
 請用以下格式輸出：
 【來信摘要】
-（摘要內容）
+（1 句話摘要）
 
 【關鍵問題】
-（問題列表）
+（簡短列出）
 
 【建議回覆】
-（完整回覆郵件內容）`;
+（完整回覆郵件內容，嚴格遵守長度要求）`;
   }
   return `You are a professional email reply assistant. Analyze the incoming email, understand the sender's issues and needs, then compose a reply in a "${toneLabel}" tone in English.
 
+⚠️ LENGTH REQUIREMENT: ${lenLabel}. Strictly follow this length constraint for the reply email body.
+
 Rules:
-1. Briefly summarize the key points (2-3 sentences)
-2. Identify key issues that need addressing
-3. Write a complete reply email (greeting, body, closing)
+1. Summarize key points in 1 sentence
+2. List key issues briefly
+3. Write the reply email (greeting, body, closing), strictly "${lenData.en}" length
 
 Output format:
 【Email Summary】
-(summary)
+(1 sentence)
 
 【Key Issues】
-(issues list)
+(brief list)
 
 【Suggested Reply】
-(full reply email)`;
+(full reply email, strictly follow length requirement)`;
 }
 
 async function callAPI(provider, key, model, systemPrompt, userMsg) {
@@ -667,6 +706,16 @@ function renderToneChips() {
   `).join('');
 }
 
+function renderLengthBar() {
+  document.getElementById('lengthBar').innerHTML = Object.entries(LENGTHS).map(([key, val]) => `
+    <div class="length-seg ${state.replyLength===key?'active':''}" onclick="selectLength('${key}')">
+      <span class="seg-emoji">${val.emoji}</span>
+      <span class="seg-label">${state.lang==='zh'?val.zh:val.en}</span>
+      <span class="seg-desc">${state.lang==='zh'?val.desc_zh:val.desc_en}</span>
+    </div>
+  `).join('');
+}
+
 function renderSavedKeys() {
   document.getElementById('savedKeys').innerHTML = Object.entries(state.keys).map(([pid, data]) => `
     <span class="saved-key-badge" style="background:${PROVIDERS[pid].color}20; color:${PROVIDERS[pid].color}; border-color:${PROVIDERS[pid].color}40">
@@ -744,11 +793,14 @@ function selectProvider(id) {
 
 function selectTone(tone) { state.tone = tone; renderToneChips(); }
 
+function selectLength(len) { state.replyLength = len; renderLengthBar(); }
+
 function setLang(lang) {
   state.lang = lang;
   document.querySelectorAll('.lang-toggle button').forEach(b => b.classList.remove('active'));
   document.querySelector(`.lang-toggle button:${lang==='zh'?'first':'last'}-child`).classList.add('active');
   renderToneChips();
+  renderLengthBar();
   detectMode(); // refresh mode badge language
 }
 
@@ -785,11 +837,76 @@ function hideSuccess() { document.getElementById('successBox').style.display = '
 
 function copyText(btn) {
   const text = btn.parentElement.nextElementSibling.textContent;
-  navigator.clipboard.writeText(text).then(() => {
-    const orig = btn.textContent;
-    btn.textContent = '✅';
-    setTimeout(() => { btn.textContent = orig; }, 1500);
-  });
+  const orig = btn.textContent;
+
+  // Method 1: Modern Clipboard API
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '✅';
+      setTimeout(() => { btn.textContent = orig; }, 1500);
+    }).catch(() => {
+      fallbackCopy(text, btn, orig);
+    });
+  } else {
+    fallbackCopy(text, btn, orig);
+  }
+}
+
+function fallbackCopy(text, btn, orig) {
+  // Method 2: execCommand fallback for iframe / restricted environments
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.left = '-9999px';
+  textarea.style.top = '-9999px';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+
+  try {
+    const ok = document.execCommand('copy');
+    if (ok) {
+      btn.textContent = '✅';
+      setTimeout(() => { btn.textContent = orig; }, 1500);
+    } else {
+      // Method 3: Select + prompt user
+      promptManualCopy(text, btn, orig);
+    }
+  } catch(e) {
+    promptManualCopy(text, btn, orig);
+  }
+  document.body.removeChild(textarea);
+}
+
+function promptManualCopy(text, btn, orig) {
+  // Last resort: show text in a selectable popup
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;';
+  
+  const label = document.createElement('div');
+  label.textContent = state.lang === 'zh' ? '請按 Ctrl+A 全選，再按 Ctrl+C 複製：' : 'Press Ctrl+A then Ctrl+C to copy:';
+  label.style.cssText = 'color:#38bdf8;font-size:13px;margin-bottom:10px;font-weight:600;';
+  
+  const box = document.createElement('textarea');
+  box.value = text;
+  box.style.cssText = 'width:90%;max-height:60vh;padding:12px;background:#1e293b;color:#e2e8f0;border:1px solid rgba(14,165,233,0.4);border-radius:10px;font-size:12px;line-height:1.6;resize:none;font-family:"Noto Sans TC",sans-serif;';
+  box.readOnly = false;
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = state.lang === 'zh' ? '✕ 關閉' : '✕ Close';
+  closeBtn.style.cssText = 'margin-top:10px;padding:8px 20px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid rgba(239,68,68,0.3);border-radius:8px;cursor:pointer;font-size:13px;';
+  closeBtn.onclick = () => { document.body.removeChild(overlay); };
+  
+  overlay.appendChild(label);
+  overlay.appendChild(box);
+  overlay.appendChild(closeBtn);
+  document.body.appendChild(overlay);
+  
+  box.focus();
+  box.select();
+  
+  btn.textContent = orig;
 }
 
 function escapeHtml(text) {
@@ -800,6 +917,7 @@ function escapeHtml(text) {
 renderProviderTabs();
 renderModelSelect();
 renderToneChips();
+renderLengthBar();
 renderSavedKeys();
 </script>
 </body>
