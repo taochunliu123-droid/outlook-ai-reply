@@ -36,17 +36,26 @@
     }
 
     .header {
-      padding: 16px;
+      padding: 14px 16px;
       border-bottom: 1px solid var(--border);
       background: rgba(0,0,0,0.2);
       display: flex; justify-content: space-between; align-items: center;
     }
     .header h1 {
-      font-size: 16px; font-weight: 700;
+      font-size: 15px; font-weight: 700;
       background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
+    .header-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
     .header-actions { display: flex; gap: 6px; }
+
+    /* Mode Badge */
+    .mode-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    }
+    .mode-badge.read { background: rgba(34,197,94,0.15); color: #22c55e; }
+    .mode-badge.compose { background: rgba(168,85,247,0.15); color: #a855f7; }
 
     .lang-toggle {
       display: flex; border-radius: 8px; overflow: hidden;
@@ -60,13 +69,13 @@
       background: var(--accent-dim); color: var(--accent); font-weight: 600;
     }
 
-    .content { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .content { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
 
     /* Provider Tabs */
     .provider-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
     .provider-tab {
-      display: flex; align-items: center; gap: 6px;
-      padding: 8px 14px; border: 2px solid transparent;
+      display: flex; align-items: center; gap: 5px;
+      padding: 7px 12px; border: 2px solid transparent;
       border-radius: 10px; background: var(--bg-card);
       color: var(--text-muted); cursor: pointer; font-size: 12px;
       position: relative; transition: all 0.2s;
@@ -76,11 +85,10 @@
       width: 7px; height: 7px; border-radius: 50%; background: var(--success);
       position: absolute; top: 4px; right: 4px;
     }
-    .provider-icon { font-size: 16px; }
 
-    /* Form Elements */
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-label { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+    /* Form */
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-label { font-size: 11px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.3px; }
 
     input[type="password"], input[type="text"], select {
       width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3);
@@ -94,12 +102,13 @@
     .key-row .flex1 { flex: 1; }
 
     .btn {
-      padding: 8px 16px; border: none; border-radius: 8px;
+      padding: 7px 14px; border: none; border-radius: 8px;
       cursor: pointer; font-size: 12px; font-weight: 600;
       transition: all 0.2s; white-space: nowrap;
     }
     .btn-save { background: var(--accent); color: #fff; }
     .btn-delete { background: rgba(239,68,68,0.15); color: var(--error); border: 1px solid rgba(239,68,68,0.3); }
+
     .btn-generate {
       width: 100%; padding: 12px; font-size: 14px; font-weight: 700;
       background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
@@ -108,6 +117,16 @@
     }
     .btn-generate:disabled { background: #334155; box-shadow: none; cursor: not-allowed; }
 
+    /* ✅ Insert Button - 重點功能 */
+    .btn-insert {
+      width: 100%; padding: 11px; font-size: 13px; font-weight: 700;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff; border: none; border-radius: 10px; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(34,197,94,0.3);
+      margin-top: 6px; transition: all 0.2s;
+    }
+    .btn-insert:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(34,197,94,0.4); }
+
     .btn-copy {
       padding: 4px 10px; background: var(--accent-dim); color: var(--accent);
       border: 1px solid rgba(14,165,233,0.3); border-radius: 6px;
@@ -115,9 +134,9 @@
     }
 
     /* Tone Chips */
-    .tone-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tone-chips { display: flex; gap: 5px; flex-wrap: wrap; }
     .tone-chip {
-      padding: 6px 12px; border: 1px solid var(--border);
+      padding: 5px 11px; border: 1px solid var(--border);
       border-radius: 8px; background: var(--bg-card);
       color: var(--text-muted); cursor: pointer; font-size: 12px;
       transition: all 0.2s;
@@ -133,89 +152,102 @@
       border: 1px solid var(--border); padding: 12px;
     }
     .email-preview-header {
-      font-size: 11px; color: var(--text-muted); margin-bottom: 8px;
+      font-size: 11px; color: var(--text-muted); margin-bottom: 6px;
       display: flex; justify-content: space-between; align-items: center;
     }
     .email-body {
       font-size: 12px; color: var(--text-secondary);
-      white-space: pre-wrap; max-height: 200px; overflow-y: auto;
+      white-space: pre-wrap; max-height: 180px; overflow-y: auto;
       line-height: 1.7;
     }
 
-    /* Additional Context */
     textarea {
-      width: 100%; padding: 10px 12px; background: rgba(0,0,0,0.2);
+      width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.2);
       border: 1px solid var(--border); border-radius: 8px;
       color: var(--text-primary); font-size: 12px; resize: vertical;
       outline: none; font-family: 'Noto Sans TC', sans-serif;
-      line-height: 1.6; min-height: 60px;
+      line-height: 1.6; min-height: 50px;
     }
 
     /* Response */
     .response-section {
-      background: var(--bg-card); border-radius: 12px;
-      border: 1px solid var(--border); padding: 14px;
-      animation: slideIn 0.3s ease-out;
+      background: var(--bg-card); border-radius: 10px;
+      border: 1px solid var(--border); padding: 12px;
+      animation: slideIn 0.3s ease-out; margin-bottom: 8px;
     }
     .response-section.reply {
       background: rgba(14,165,233,0.06);
       border-color: rgba(14,165,233,0.2);
     }
     .response-title {
-      font-size: 12px; font-weight: 700; margin-bottom: 8px;
+      font-size: 11px; font-weight: 700; margin-bottom: 6px;
       display: flex; justify-content: space-between; align-items: center;
     }
     .response-title.reply-title { color: var(--accent); }
     .response-body {
-      font-size: 13px; color: var(--text-secondary);
+      font-size: 12px; color: var(--text-secondary);
       white-space: pre-wrap; line-height: 1.7;
     }
 
     .error-box {
-      padding: 10px 14px; background: rgba(239,68,68,0.1);
+      padding: 10px 12px; background: rgba(239,68,68,0.1);
       border: 1px solid rgba(239,68,68,0.3); border-radius: 8px;
       color: #fca5a5; font-size: 12px;
     }
 
+    .success-box {
+      padding: 10px 12px; background: rgba(34,197,94,0.1);
+      border: 1px solid rgba(34,197,94,0.3); border-radius: 8px;
+      color: #86efac; font-size: 12px; text-align: center;
+    }
+
     .loading { animation: pulse 1.5s infinite; }
     @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
-    @keyframes slideIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes slideIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 
-    .saved-keys { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .saved-keys { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
     .saved-key-badge {
-      padding: 3px 10px; border-radius: 16px; font-size: 11px;
-      border: 1px solid;
+      padding: 2px 8px; border-radius: 14px; font-size: 10px; border: 1px solid;
     }
 
     .settings-toggle {
-      padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border);
+      padding: 5px 10px; border-radius: 8px; border: 1px solid var(--border);
       background: transparent; color: var(--text-muted); cursor: pointer; font-size: 12px;
     }
     .settings-toggle.active { background: var(--accent-dim); color: var(--accent); border-color: rgba(14,165,233,0.3); }
 
+    .collapsible { overflow: hidden; transition: max-height 0.3s ease; }
+    .collapsible.collapsed { max-height: 0; }
+    .collapsible.expanded { max-height: 800px; }
+
     /* Floater */
     .brand-badge {
-      position: fixed; bottom: 12px; right: 12px;
-      display: flex; align-items: center; gap: 6px;
-      padding: 6px 10px; background: rgba(30,41,59,0.95);
+      position: fixed; bottom: 10px; right: 10px;
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 9px; background: rgba(30,41,59,0.95);
       backdrop-filter: blur(20px); border-radius: 40px;
       border: 1px solid rgba(255,255,255,0.1);
       text-decoration: none; color: #f8fafc; z-index: 1000;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.3); transition: all 0.3s;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.3); transition: all 0.3s;
+      font-size: 10px;
     }
     .brand-badge:hover { transform: translateY(-2px); border-color: #0ea5e9; }
     .brand-badge strong {
-      font-size: 0.7rem; font-weight: 600;
+      font-size: 0.65rem; font-weight: 600;
       background: linear-gradient(135deg, #e63946, #f4a261, #2a9d8f, #264653, #e76f51);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-    .brand-badge span { font-size: 0.6rem; color: #94a3b8; }
-    .brand-badge svg { width: 16px; height: 16px; fill: #0ea5e9; }
+    .brand-badge svg { width: 14px; height: 14px; fill: #0ea5e9; }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1 id="headerTitle">AI 郵件回覆助手</h1>
+    <div>
+      <h1 id="headerTitle">AI 郵件回覆助手</h1>
+      <div class="header-sub">
+        <span class="mode-badge" id="modeBadge">⏳ 偵測中...</span>
+      </div>
+    </div>
     <div class="header-actions">
       <div class="lang-toggle">
         <button class="active" onclick="setLang('zh')">中文</button>
@@ -227,49 +259,51 @@
 
   <div class="content">
     <!-- Settings Panel -->
-    <div id="settingsPanel">
-      <div class="provider-tabs" id="providerTabs"></div>
-      <div class="form-group">
-        <div class="key-row">
-          <div class="flex1">
-            <label class="form-label">API Key</label>
-            <input type="password" id="apiKeyInput" placeholder="Enter API Key..." />
-          </div>
-          <div style="width:100px">
-            <label class="form-label">Label</label>
-            <input type="text" id="labelInput" placeholder="e.g. 公司用" />
+    <div id="settingsPanel" class="collapsible expanded">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="provider-tabs" id="providerTabs"></div>
+        <div class="form-group">
+          <div class="key-row">
+            <div class="flex1">
+              <label class="form-label">API Key</label>
+              <input type="password" id="apiKeyInput" placeholder="Enter API Key..." />
+            </div>
+            <div style="width:90px">
+              <label class="form-label">Label</label>
+              <input type="text" id="labelInput" placeholder="公司用" />
+            </div>
           </div>
         </div>
-      </div>
-      <div class="form-group">
-        <div class="key-row">
-          <div class="flex1">
-            <label class="form-label">Model</label>
-            <select id="modelSelect"></select>
+        <div class="form-group">
+          <div class="key-row">
+            <div class="flex1">
+              <label class="form-label">Model</label>
+              <select id="modelSelect"></select>
+            </div>
+            <button class="btn btn-save" onclick="saveKey()">💾</button>
+            <button class="btn btn-delete" onclick="removeKey()" id="deleteBtn" style="display:none">🗑</button>
           </div>
-          <button class="btn btn-save" onclick="saveKey()">💾 Save</button>
-          <button class="btn btn-delete" onclick="removeKey()" id="deleteBtn" style="display:none">🗑</button>
         </div>
+        <div class="saved-keys" id="savedKeys"></div>
       </div>
-      <div class="saved-keys" id="savedKeys"></div>
     </div>
 
     <!-- Email Content -->
     <div class="email-preview">
       <div class="email-preview-header">
-        <span id="emailLabel">📨 來信內容（自動讀取）</span>
-        <button class="btn-copy" onclick="refreshEmail()" id="refreshBtn">🔄 重新讀取</button>
+        <span id="emailLabel">📨 來信內容</span>
+        <button class="btn-copy" onclick="refreshEmail()" id="refreshBtn">🔄 讀取</button>
       </div>
-      <div class="email-body" id="emailBody">正在讀取郵件內容...</div>
+      <div class="email-body" id="emailBody">正在讀取...</div>
     </div>
 
-    <!-- Additional Context -->
+    <!-- Context -->
     <div class="form-group">
       <label class="form-label" id="contextLabel">💡 額外指示（選填）</label>
-      <textarea id="contextInput" placeholder="例如：請婉拒這個需求，但提供替代方案..." rows="2"></textarea>
+      <textarea id="contextInput" placeholder="例如：請婉拒但提供替代方案..." rows="2"></textarea>
     </div>
 
-    <!-- Tone Selection -->
+    <!-- Tone -->
     <div class="form-group">
       <label class="form-label" id="toneLabel">🎭 回覆語氣</label>
       <div class="tone-chips" id="toneChips"></div>
@@ -280,19 +314,20 @@
       🚀 產生回覆
     </button>
 
-    <!-- Error -->
+    <!-- Error / Success -->
     <div class="error-box" id="errorBox" style="display:none"></div>
+    <div class="success-box" id="successBox" style="display:none"></div>
 
     <!-- Response -->
     <div id="responseArea"></div>
+
+    <!-- Insert Button (Compose mode only) -->
+    <div id="insertArea" style="display:none"></div>
   </div>
 
   <!-- PM Mayors Floater -->
   <a href="https://pmmayors.com" target="_blank" rel="noopener noreferrer" class="brand-badge">
-    <div style="display:flex;flex-direction:column">
-      <strong>PM Mayors</strong>
-      <span>Where Taiwan AI PM Initiated</span>
-    </div>
+    <strong>PM Mayors</strong>
     <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-1 17.93V18c0-.55-.45-1-1-1H8v-2c0-.55-.45-1-1-1H5.07C4.4 12.68 4 11.38 4 10c0-2.1.8-4 2.1-5.45C6.7 6.02 8 7 8 8v1c0 1.1.9 2 2 2 .55 0 1 .45 1 1v2c0 1.1.9 2 2 2s2-.9 2-2v-1c.55 0 1-.45 1-1 0-.55.45-1 1-1h.93c.42 1.3.57 2.73.35 4.22-.31 2.08-1.38 3.97-3 5.33-.55.46-1.14.86-1.78 1.18C12.75 19.91 12.38 19.97 11 19.93z"/></svg>
   </a>
 
@@ -325,59 +360,187 @@ let state = {
   tone: 'professional',
   emailContent: '',
   showSettings: true,
-  loading: false
+  loading: false,
+  mode: 'unknown',       // 'read' or 'compose'
+  lastReplyText: ''       // 儲存最後產生的回覆，用於插入
 };
 
 // ============================================================
-// Outlook Office.js Integration
+// Office.js - 偵測模式 + 讀取郵件
 // ============================================================
 Office.onReady(function(info) {
   if (info.host === Office.HostType.Outlook) {
-    readEmail();
+    detectMode();
   }
 });
 
-function readEmail() {
+function detectMode() {
   try {
     const item = Office.context.mailbox.item;
     if (!item) {
-      document.getElementById('emailBody').textContent = state.lang === 'zh'
-        ? '請先選擇一封郵件' : 'Please select an email first';
+      setMode('unknown');
       return;
     }
-    item.body.getAsync(Office.CoercionType.Text, function(result) {
-      if (result.status === Office.AsyncResultStatus.Succeeded) {
-        state.emailContent = result.value;
-        document.getElementById('emailBody').textContent = result.value || (state.lang === 'zh' ? '（郵件內容為空）' : '(Empty email)');
-      } else {
-        document.getElementById('emailBody').textContent = state.lang === 'zh'
-          ? '無法讀取郵件內容' : 'Unable to read email content';
-      }
-    });
+
+    // 判斷是 Read 還是 Compose 模式
+    // Compose 模式下有 item.subject.setAsync 方法
+    if (typeof item.body.setAsync === 'function') {
+      setMode('compose');
+      readComposeEmail();
+    } else {
+      setMode('read');
+      readEmail();
+    }
   } catch(e) {
-    // Fallback for testing outside Outlook
-    document.getElementById('emailBody').textContent = state.lang === 'zh'
-      ? '⚠️ 未在 Outlook 環境中。請手動貼上郵件內容進行測試。'
-      : '⚠️ Not in Outlook. Paste email content manually to test.';
-    document.getElementById('emailBody').setAttribute('contenteditable', 'true');
-    document.getElementById('emailBody').style.minHeight = '100px';
-    document.getElementById('emailBody').addEventListener('input', function() {
-      state.emailContent = this.textContent;
-    });
+    setMode('fallback');
+    enableManualMode();
   }
 }
 
-function refreshEmail() { readEmail(); }
+function setMode(mode) {
+  state.mode = mode;
+  const badge = document.getElementById('modeBadge');
+  const zh = state.lang === 'zh';
+
+  switch(mode) {
+    case 'read':
+      badge.className = 'mode-badge read';
+      badge.textContent = zh ? '📖 閱讀模式' : '📖 Read Mode';
+      break;
+    case 'compose':
+      badge.className = 'mode-badge compose';
+      badge.textContent = zh ? '✏️ 撰寫模式 - 可直接插入' : '✏️ Compose - Insert Enabled';
+      break;
+    default:
+      badge.className = 'mode-badge';
+      badge.style.background = 'rgba(251,191,36,0.15)';
+      badge.style.color = '#fbbf24';
+      badge.textContent = zh ? '📝 手動模式' : '📝 Manual Mode';
+  }
+}
+
+// === 讀信模式：讀取郵件內容 ===
+function readEmail() {
+  const item = Office.context.mailbox.item;
+  item.body.getAsync(Office.CoercionType.Text, function(result) {
+    if (result.status === Office.AsyncResultStatus.Succeeded) {
+      state.emailContent = result.value;
+      document.getElementById('emailBody').textContent = result.value || (state.lang === 'zh' ? '（郵件為空）' : '(Empty)');
+    }
+  });
+}
+
+// === 撰寫/回覆模式：讀取原始引用郵件 ===
+function readComposeEmail() {
+  const item = Office.context.mailbox.item;
+
+  // 先嘗試讀取 body（回覆時會包含原始郵件引用）
+  item.body.getAsync(Office.CoercionType.Text, function(result) {
+    if (result.status === Office.AsyncResultStatus.Succeeded) {
+      let body = result.value || '';
+
+      // 回覆郵件通常包含 "From:" 或 "寄件者:" 的引用區塊
+      // 嘗試擷取原始郵件內容
+      let originalEmail = '';
+      const separators = [
+        /\n-{3,}\s*Original Message\s*-{3,}/i,
+        /\nFrom:/i,
+        /\n寄件者:/i,
+        /\n-----/,
+        /\nOn .+ wrote:/i,
+        /\n在 .+ 撰寫:/i,
+      ];
+
+      for (const sep of separators) {
+        const match = body.search(sep);
+        if (match > -1) {
+          originalEmail = body.substring(match);
+          break;
+        }
+      }
+
+      state.emailContent = originalEmail || body;
+      document.getElementById('emailBody').textContent = state.emailContent || (state.lang === 'zh' ? '（未偵測到原始郵件，請手動貼上）' : '(No original email detected)');
+    }
+  });
+}
+
+// === 插入回覆到郵件正文 ===
+function insertReplyToEmail(text) {
+  if (state.mode !== 'compose') return;
+
+  const item = Office.context.mailbox.item;
+  // 在游標位置或郵件開頭插入
+  item.body.prependAsync(
+    text + '\n\n',
+    { coercionType: Office.CoercionType.Text },
+    function(result) {
+      if (result.status === Office.AsyncResultStatus.Succeeded) {
+        showSuccess(state.lang === 'zh' ? '✅ 已插入回覆到郵件！' : '✅ Reply inserted into email!');
+      } else {
+        showError(state.lang === 'zh' ? '插入失敗，請手動複製' : 'Insert failed, please copy manually');
+      }
+    }
+  );
+}
+
+// === Fallback 手動模式 ===
+function enableManualMode() {
+  const el = document.getElementById('emailBody');
+  el.textContent = state.lang === 'zh'
+    ? '⚠️ 未在 Outlook 環境中。請手動貼上郵件內容：'
+    : '⚠️ Not in Outlook. Paste email content here:';
+  el.setAttribute('contenteditable', 'true');
+  el.style.minHeight = '100px';
+  el.style.border = '1px dashed rgba(14,165,233,0.3)';
+  el.style.padding = '10px';
+  el.style.cursor = 'text';
+  el.addEventListener('input', function() {
+    state.emailContent = this.textContent;
+  });
+}
+
+function refreshEmail() { detectMode(); }
 
 // ============================================================
-// API Calls
+// API Calls (same as before)
 // ============================================================
 function buildSystemPrompt() {
   const toneLabel = state.lang === 'zh' ? TONES[state.tone].zh : TONES[state.tone].en;
   if (state.lang === 'zh') {
-    return `你是一位專業的企業郵件回覆助手。請分析以下來信內容，理解對方的問題和需求，然後用「${toneLabel}」的語氣，以繁體中文撰寫一封回覆郵件。\n\n規則：\n1. 先簡要摘要來信重點（2-3 句）\n2. 識別需要回應的關鍵問題\n3. 撰寫完整的回覆郵件（包含稱呼、正文、結尾）\n4. 回覆需要有條理、專業、適當\n\n請用以下格式輸出：\n【來信摘要】\n（摘要內容）\n\n【關鍵問題】\n（問題列表）\n\n【建議回覆】\n（完整回覆郵件內容）`;
+    return `你是一位專業的企業郵件回覆助手。請分析以下來信內容，理解對方的問題和需求，然後用「${toneLabel}」的語氣，以繁體中文撰寫一封回覆郵件。
+
+規則：
+1. 先簡要摘要來信重點（2-3 句）
+2. 識別需要回應的關鍵問題
+3. 撰寫完整的回覆郵件（包含稱呼、正文、結尾）
+
+請用以下格式輸出：
+【來信摘要】
+（摘要內容）
+
+【關鍵問題】
+（問題列表）
+
+【建議回覆】
+（完整回覆郵件內容）`;
   }
-  return `You are a professional email reply assistant. Analyze the incoming email, understand the sender's issues and needs, then compose a reply in a "${toneLabel}" tone in English.\n\nRules:\n1. Briefly summarize the key points (2-3 sentences)\n2. Identify key issues that need addressing\n3. Write a complete reply email (greeting, body, closing)\n4. Keep the reply organized, professional, and appropriate\n\nOutput format:\n【Email Summary】\n(summary)\n\n【Key Issues】\n(issues list)\n\n【Suggested Reply】\n(full reply email)`;
+  return `You are a professional email reply assistant. Analyze the incoming email, understand the sender's issues and needs, then compose a reply in a "${toneLabel}" tone in English.
+
+Rules:
+1. Briefly summarize the key points (2-3 sentences)
+2. Identify key issues that need addressing
+3. Write a complete reply email (greeting, body, closing)
+
+Output format:
+【Email Summary】
+(summary)
+
+【Key Issues】
+(issues list)
+
+【Suggested Reply】
+(full reply email)`;
 }
 
 async function callAPI(provider, key, model, systemPrompt, userMsg) {
@@ -393,7 +556,7 @@ async function callAPI(provider, key, model, systemPrompt, userMsg) {
         },
         body: JSON.stringify({ model, max_tokens:2048, system:systemPrompt, messages:[{role:'user',content:userMsg}] })
       });
-      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || 'Anthropic API error: '+res.status); }
+      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || 'API error: '+res.status); }
       const data = await res.json();
       return data.content?.map(b=>b.text).join('\n') || '';
     }
@@ -403,7 +566,7 @@ async function callAPI(provider, key, model, systemPrompt, userMsg) {
         headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+key },
         body: JSON.stringify({ model, max_tokens:2048, messages:[{role:'system',content:systemPrompt},{role:'user',content:userMsg}] })
       });
-      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || 'OpenAI API error: '+res.status); }
+      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || 'API error: '+res.status); }
       const data = await res.json();
       return data.choices?.[0]?.message?.content || '';
     }
@@ -418,7 +581,7 @@ async function callAPI(provider, key, model, systemPrompt, userMsg) {
           generationConfig:{maxOutputTokens:2048}
         })
       });
-      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || 'Gemini API error: '+res.status); }
+      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || 'API error: '+res.status); }
       const data = await res.json();
       return data.candidates?.[0]?.content?.parts?.map(p=>p.text).join('\n') || '';
     }
@@ -427,7 +590,11 @@ async function callAPI(provider, key, model, systemPrompt, userMsg) {
 
 async function generateReply() {
   const emailContent = state.emailContent || document.getElementById('emailBody').textContent;
-  if (!emailContent.trim()) return;
+  if (!emailContent.trim() || emailContent.includes('未在 Outlook') || emailContent.includes('正在讀取')) {
+    showError(state.lang === 'zh' ? '請先貼上或讀取郵件內容' : 'Please load or paste email content first');
+    return;
+  }
+
   const keyData = state.keys[state.activeProvider];
   if (!keyData?.key) {
     showError(state.lang === 'zh' ? '請先設定 API Key' : 'Please set up API Key first');
@@ -440,6 +607,7 @@ async function generateReply() {
   btn.textContent = state.lang === 'zh' ? '⏳ AI 分析中...' : '⏳ Generating...';
   btn.classList.add('loading');
   hideError();
+  hideSuccess();
 
   const systemPrompt = buildSystemPrompt();
   let userMsg = emailContent.trim();
@@ -460,15 +628,14 @@ async function generateReply() {
 }
 
 // ============================================================
-// UI Rendering
+// UI
 // ============================================================
 function renderProviderTabs() {
-  const el = document.getElementById('providerTabs');
-  el.innerHTML = Object.values(PROVIDERS).map(p => `
+  document.getElementById('providerTabs').innerHTML = Object.values(PROVIDERS).map(p => `
     <button class="provider-tab ${state.activeProvider===p.id?'active':''}"
             style="--active-color:${p.color}; --active-bg:${p.color}15"
             onclick="selectProvider('${p.id}')">
-      <span class="provider-icon">${p.icon}</span>
+      <span style="font-size:15px">${p.icon}</span>
       <span>${p.name}</span>
       ${state.keys[p.id]?.key ? '<span class="dot"></span>' : ''}
     </button>
@@ -501,8 +668,7 @@ function renderToneChips() {
 }
 
 function renderSavedKeys() {
-  const el = document.getElementById('savedKeys');
-  el.innerHTML = Object.entries(state.keys).map(([pid, data]) => `
+  document.getElementById('savedKeys').innerHTML = Object.entries(state.keys).map(([pid, data]) => `
     <span class="saved-key-badge" style="background:${PROVIDERS[pid].color}20; color:${PROVIDERS[pid].color}; border-color:${PROVIDERS[pid].color}40">
       ${PROVIDERS[pid].icon} ${data.label || PROVIDERS[pid].name} • ${data.model}
     </span>
@@ -519,21 +685,53 @@ function renderResponse(text) {
   const area = document.getElementById('responseArea');
   if (parsed.length === 0) {
     area.innerHTML = `<div class="response-section"><div class="response-body">${escapeHtml(text)}</div></div>`;
+    state.lastReplyText = text;
+    showInsertButton();
     return;
   }
 
+  // 找出回覆區塊
+  let replyContent = '';
   area.innerHTML = parsed.map(s => {
     const isReply = s.title.includes('回覆') || s.title.includes('Reply');
+    if (isReply) replyContent = s.content;
     return `
-      <div class="response-section ${isReply?'reply':''}" style="margin-bottom:10px">
+      <div class="response-section ${isReply?'reply':''}">
         <div class="response-title ${isReply?'reply-title':''}">
           <span style="color:${isReply?'var(--accent)':'var(--text-muted)'}">${escapeHtml(s.title)}</span>
-          ${isReply ? `<button class="btn-copy" onclick="copyText(this)">${state.lang==='zh'?'📋 複製回覆':'📋 Copy'}</button>` : ''}
+          ${isReply ? `<button class="btn-copy" onclick="copyText(this)">${state.lang==='zh'?'📋 複製':'📋 Copy'}</button>` : ''}
         </div>
         <div class="response-body">${escapeHtml(s.content)}</div>
       </div>
     `;
   }).join('');
+
+  state.lastReplyText = replyContent || text;
+  showInsertButton();
+}
+
+function showInsertButton() {
+  const insertArea = document.getElementById('insertArea');
+  if (state.mode === 'compose' && state.lastReplyText) {
+    const zh = state.lang === 'zh';
+    insertArea.style.display = 'block';
+    insertArea.innerHTML = `
+      <button class="btn-insert" onclick="doInsert()">
+        📥 ${zh ? '直接插入到郵件回覆' : 'Insert into Email Reply'}
+      </button>
+      <div style="text-align:center;margin-top:4px;font-size:11px;color:var(--text-muted)">
+        ${zh ? '點擊後 AI 建議的回覆會自動填入郵件正文' : 'AI reply will be inserted at the top of your email'}
+      </div>
+    `;
+  } else {
+    insertArea.style.display = 'none';
+  }
+}
+
+function doInsert() {
+  if (state.lastReplyText) {
+    insertReplyToEmail(state.lastReplyText);
+  }
 }
 
 // ============================================================
@@ -544,22 +742,20 @@ function selectProvider(id) {
   renderProviderTabs(); renderModelSelect(); renderSavedKeys();
 }
 
-function selectTone(tone) {
-  state.tone = tone;
-  renderToneChips();
-}
+function selectTone(tone) { state.tone = tone; renderToneChips(); }
 
 function setLang(lang) {
   state.lang = lang;
   document.querySelectorAll('.lang-toggle button').forEach(b => b.classList.remove('active'));
   document.querySelector(`.lang-toggle button:${lang==='zh'?'first':'last'}-child`).classList.add('active');
-  updateLabels();
   renderToneChips();
+  detectMode(); // refresh mode badge language
 }
 
 function toggleSettings() {
   state.showSettings = !state.showSettings;
-  document.getElementById('settingsPanel').style.display = state.showSettings ? 'block' : 'none';
+  const panel = document.getElementById('settingsPanel');
+  panel.className = 'collapsible ' + (state.showSettings ? 'expanded' : 'collapsed');
   document.getElementById('settingsBtn').classList.toggle('active', state.showSettings);
 }
 
@@ -582,18 +778,17 @@ function removeKey() {
   renderProviderTabs(); renderModelSelect(); renderSavedKeys();
 }
 
-function showError(msg) {
-  const el = document.getElementById('errorBox');
-  el.textContent = '⚠️ ' + msg;
-  el.style.display = 'block';
-}
+function showError(msg) { const el = document.getElementById('errorBox'); el.textContent = '⚠️ ' + msg; el.style.display = 'block'; }
 function hideError() { document.getElementById('errorBox').style.display = 'none'; }
+function showSuccess(msg) { const el = document.getElementById('successBox'); el.textContent = msg; el.style.display = 'block'; setTimeout(() => { el.style.display = 'none'; }, 3000); }
+function hideSuccess() { document.getElementById('successBox').style.display = 'none'; }
 
 function copyText(btn) {
   const text = btn.parentElement.nextElementSibling.textContent;
   navigator.clipboard.writeText(text).then(() => {
-    btn.textContent = state.lang==='zh' ? '✅ 已複製' : '✅ Copied';
-    setTimeout(() => { btn.textContent = state.lang==='zh' ? '📋 複製回覆' : '📋 Copy'; }, 2000);
+    const orig = btn.textContent;
+    btn.textContent = '✅';
+    setTimeout(() => { btn.textContent = orig; }, 1500);
   });
 }
 
@@ -601,20 +796,7 @@ function escapeHtml(text) {
   return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
 }
 
-function updateLabels() {
-  const zh = state.lang === 'zh';
-  document.getElementById('headerTitle').textContent = zh ? 'AI 郵件回覆助手' : 'AI Email Reply Assistant';
-  document.getElementById('emailLabel').textContent = zh ? '📨 來信內容（自動讀取）' : '📨 Email Content (Auto-read)';
-  document.getElementById('refreshBtn').textContent = zh ? '🔄 重新讀取' : '🔄 Refresh';
-  document.getElementById('contextLabel').textContent = zh ? '💡 額外指示（選填）' : '💡 Additional Context (Optional)';
-  document.getElementById('contextInput').placeholder = zh ? '例如：請婉拒這個需求，但提供替代方案...' : 'e.g. Politely decline but offer alternatives...';
-  document.getElementById('toneLabel').textContent = zh ? '🎭 回覆語氣' : '🎭 Reply Tone';
-  document.getElementById('generateBtn').textContent = zh ? '🚀 產生回覆' : '🚀 Generate Reply';
-}
-
-// ============================================================
-// Initialize
-// ============================================================
+// Init
 renderProviderTabs();
 renderModelSelect();
 renderToneChips();
