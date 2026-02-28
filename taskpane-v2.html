@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 郵件回覆助手</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap');
+
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.08);
+      --text-primary: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent: #38bdf8;
+      --accent-dim: rgba(14,165,233,0.15);
+      --success: #22c55e;
+      --error: #ef4444;
+      --claude: #D97706;
+      --openai: #10A37F;
+      --gemini: #4285F4;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans TC', 'Segoe UI', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-y: auto;
+    }
+
+    .header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,0.2);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .header h1 {
+      font-size: 15px; font-weight: 700;
+      background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .header-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .header-actions { display: flex; gap: 6px; }
+
+    /* Mode Badge */
+    .mode-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    }
+    .mode-badge.read { background: rgba(34,197,94,0.15); color: #22c55e; }
+    .mode-badge.compose { background: rgba(168,85,247,0.15); color: #a855f7; }
+
+    .lang-toggle {
+      display: flex; border-radius: 8px; overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .lang-toggle button {
+      padding: 4px 12px; border: none; background: transparent;
+      color: var(--text-muted); cursor: pointer; font-size: 12px;
+    }
+    .lang-toggle button.active {
+      background: var(--accent-dim); color: var(--accent); font-weight: 600;
+    }
+
+    .content { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+
+    /* Provider Tabs */
+    .provider-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .provider-tab {
+      display: flex; align-items: center; gap: 5px;
+      padding: 7px 12px; border: 2px solid transparent;
+      border-radius: 10px; background: var(--bg-card);
+      color: var(--text-muted); cursor: pointer; font-size: 12px;
+      position: relative; transition: all 0.2s;
+    }
+    .provider-tab.active { border-color: var(--active-color); background: var(--active-bg); color: var(--active-color); font-weight: 600; }
+    .provider-tab .dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--success);
+      position: absolute; top: 4px; right: 4px;
+    }
+
+    /* Form */
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-label { font-size: 11px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.3px; }
+
+    input[type="password"], input[type="text"], select {
+      width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text-primary); font-size: 12px; outline: none;
+    }
+    input:focus, select:focus { border-color: rgba(14,165,233,0.5); }
+    select { cursor: pointer; }
+
+    .key-row { display: flex; gap: 8px; align-items: flex-end; }
+    .key-row .flex1 { flex: 1; }
+
+    .btn {
+      padding: 7px 14px; border: none; border-radius: 8px;
+      cursor: pointer; font-size: 12px; font-weight: 600;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .btn-save { background: var(--accent); color: #fff; }
+    .btn-delete { background: rgba(239,68,68,0.15); color: var(--error); border: 1px solid rgba(239,68,68,0.3); }
+
+    .btn-generate {
+      width: 100%; padding: 12px; font-size: 14px; font-weight: 700;
+      background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+      color: #fff; border: none; border-radius: 10px; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(14,165,233,0.3);
+    }
+    .btn-generate:disabled { background: #334155; box-shadow: none; cursor: not-allowed; }
+
+    /* ✅ Insert Button - 重點功能 */
+    .btn-insert {
+      width: 100%; padding: 11px; font-size: 13px; font-weight: 700;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff; border: none; border-radius: 10px; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(34,197,94,0.3);
+      margin-top: 6px; transition: all 0.2s;
+    }
+    .btn-insert:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(34,197,94,0.4); }
+
+    .btn-copy {
+      padding: 4px 10px; background: var(--accent-dim); color: var(--accent);
+      border: 1px solid rgba(14,165,233,0.3); border-radius: 6px;
+      cursor: pointer; font-size: 11px; font-weight: 600;
+    }
+
+    /* Tone Chips */
+    .tone-chips { display: flex; gap: 5px; flex-wrap: wrap; }
+    .tone-chip {
+      padding: 5px 11px; border: 1px solid var(--border);
+      border-radius: 8px; background: var(--bg-card);
+      color: var(--text-muted); cursor: pointer; font-size: 12px;
+      transition: all 0.2s;
+    }
+    .tone-chip.active {
+      background: var(--accent-dim); border-color: rgba(14,165,233,0.4);
+      color: var(--accent); font-weight: 600;
+    }
+
+    /* Length Bar */
+    .length-bar {
+      display: flex; border-radius: 10px; overflow: hidden;
+      border: 1px solid var(--border); background: var(--bg-card);
+    }
+    .length-seg {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 8px 4px; cursor: pointer; transition: all 0.2s;
+      border-right: 1px solid var(--border); position: relative;
+    }
+    .length-seg:last-child { border-right: none; }
+    .length-seg .seg-emoji { font-size: 14px; }
+    .length-seg .seg-label { font-size: 12px; font-weight: 500; margin-top: 1px; }
+    .length-seg .seg-desc { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+    .length-seg.active {
+      background: var(--accent-dim); color: var(--accent);
+    }
+    .length-seg.active .seg-desc { color: var(--accent); opacity: 0.7; }
+
+    /* Email Preview */
+    .email-preview {
+      background: var(--bg-card); border-radius: 10px;
+      border: 1px solid var(--border); padding: 12px;
+    }
+    .email-preview-header {
+      font-size: 11px; color: var(--text-muted); margin-bottom: 6px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .email-body {
+      font-size: 12px; color: var(--text-secondary);
+      white-space: pre-wrap; max-height: 180px; overflow-y: auto;
+      line-height: 1.7;
+    }
+
+    textarea {
+      width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.2);
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text-primary); font-size: 12px; resize: vertical;
+      outline: none; font-family: 'Noto Sans TC', sans-serif;
+      line-height: 1.6; min-height: 50px;
+    }
+
+    /* Response */
+    .response-section {
+      background: var(--bg-card); border-radius: 10px;
+      border: 1px solid var(--border); padding: 12px;
+      animation: slideIn 0.3s ease-out; margin-bottom: 8px;
+    }
+    .response-section.reply {
+      background: rgba(14,165,233,0.06);
+      border-color: rgba(14,165,233,0.2);
+    }
+    .response-title {
+      font-size: 11px; font-weight: 700; margin-bottom: 6px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .response-title.reply-title { color: var(--accent); }
+    .response-body {
+      font-size: 12px; color: var(--text-secondary);
+      white-space: pre-wrap; line-height: 1.7;
+    }
+
+    .error-box {
+      padding: 10px 12px; background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3); border-radius: 8px;
+      color: #fca5a5; font-size: 12px;
+    }
+
+    .success-box {
+      padding: 10px 12px; background: rgba(34,197,94,0.1);
+      border: 1px solid rgba(34,197,94,0.3); border-radius: 8px;
+      color: #86efac; font-size: 12px; text-align: center;
+    }
+
+    .loading { animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+    @keyframes slideIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+    .saved-keys { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
+    .saved-key-badge {
+      padding: 2px 8px; border-radius: 14px; font-size: 10px; border: 1px solid;
+    }
+
+    .settings-toggle {
+      padding: 5px 10px; border-radius: 8px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-muted); cursor: pointer; font-size: 12px;
+    }
+    .settings-toggle.active { background: var(--accent-dim); color: var(--accent); border-color: rgba(14,165,233,0.3); }
+
+    .collapsible { overflow: hidden; transition: max-height 0.3s ease; }
+    .collapsible.collapsed { max-height: 0; }
+    .collapsible.expanded { max-height: 800px; }
+
+    /* Floater */
+    .brand-badge {
+      position: fixed; bottom: 10px; right: 10px;
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 9px; background: rgba(30,41,59,0.95);
+      backdrop-filter: blur(20px); border-radius: 40px;
+      border: 1px solid rgba(255,255,255,0.1);
+      text-decoration: none; color: #f8fafc; z-index: 1000;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.3); transition: all 0.3s;
+      font-size: 10px;
+    }
+    .brand-badge:hover { transform: translateY(-2px); border-color: #0ea5e9; }
+    .brand-badge strong {
+      font-size: 0.65rem; font-weight: 600;
+      background: linear-gradient(135deg, #e63946, #f4a261, #2a9d8f, #264653, #e76f51);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .brand-badge svg { width: 14px; height: 14px; fill: #0ea5e9; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1 id="headerTitle">AI 郵件回覆助手</h1>
+      <div class="header-sub">
+        <span class="mode-badge" id="modeBadge">⏳ 偵測中...</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="lang-toggle">
+        <button class="active" onclick="setLang('zh')">中文</button>
+        <button onclick="setLang('en')">EN</button>
+      </div>
+      <button class="settings-toggle active" onclick="toggleSettings()" id="settingsBtn">⚙️</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Settings Panel -->
+    <div id="settingsPanel" class="collapsible expanded">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="provider-tabs" id="providerTabs"></div>
+        <div class="form-group">
+          <div class="key-row">
+            <div class="flex1">
+              <label class="form-label">API Key</label>
+              <input type="password" id="apiKeyInput" placeholder="Enter API Key..." />
+            </div>
+            <div style="width:90px">
+              <label class="form-label">Label</label>
+              <input type="text" id="labelInput" placeholder="公司用" />
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="key-row">
+            <div class="flex1">
+              <label class="form-label">Model</label>
+              <select id="modelSelect"></select>
+            </div>
+            <button class="btn btn-save" onclick="saveKey()">💾</button>
+            <button class="btn btn-delete" onclick="removeKey()" id="deleteBtn" style="display:none">🗑</button>
+          </div>
+        </div>
+        <div class="saved-keys" id="savedKeys"></div>
+      </div>
+    </div>
+
+    <!-- Email Content -->
+    <div class="email-preview">
+      <div class="email-preview-header">
+        <span id="emailLabel">📨 來信內容</span>
+        <button class="btn-copy" onclick="refreshEmail()" id="refreshBtn">🔄 讀取</button>
+      </div>
+      <div class="email-body" id="emailBody">正在讀取...</div>
+    </div>
+
+    <!-- Context -->
+    <div class="form-group">
+      <label class="form-label" id="contextLabel">💡 額外指示（選填）</label>
+      <textarea id="contextInput" placeholder="例如：請婉拒但提供替代方案..." rows="2"></textarea>
+    </div>
+
+    <!-- Tone -->
+    <div class="form-group">
+      <label class="form-label" id="toneLabel">🎭 回覆語氣</label>
+      <div class="tone-chips" id="toneChips"></div>
+    </div>
+
+    <!-- Length -->
+    <div class="form-group">
+      <label class="form-label" id="lengthLabel">📏 回覆長度</label>
+      <div class="length-bar" id="lengthBar"></div>
+    </div>
+
+    <!-- Generate -->
+    <button class="btn btn-generate" id="generateBtn" onclick="generateReply()">
+      🚀 產生回覆
+    </button>
+
+    <!-- Error / Success -->
+    <div class="error-box" id="errorBox" style="display:none"></div>
+    <div class="success-box" id="successBox" style="display:none"></div>
+
+    <!-- Response -->
+    <div id="responseArea"></div>
+
+    <!-- Insert Button (Compose mode only) -->
+    <div id="insertArea" style="display:none"></div>
+  </div>
+
+  <!-- PM Mayors Floater -->
+  <a href="https://pmmayors.com" target="_blank" rel="noopener noreferrer" class="brand-badge">
+    <strong>PM Mayors</strong>
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-1 17.93V18c0-.55-.45-1-1-1H8v-2c0-.55-.45-1-1-1H5.07C4.4 12.68 4 11.38 4 10c0-2.1.8-4 2.1-5.45C6.7 6.02 8 7 8 8v1c0 1.1.9 2 2 2 .55 0 1 .45 1 1v2c0 1.1.9 2 2 2s2-.9 2-2v-1c.55 0 1-.45 1-1 0-.55.45-1 1-1h.93c.42 1.3.57 2.73.35 4.22-.31 2.08-1.38 3.97-3 5.33-.55.46-1.14.86-1.78 1.18C12.75 19.91 12.38 19.97 11 19.93z"/></svg>
+  </a>
+
+<script>
+// ============================================================
+// State
+// ============================================================
+const PROVIDERS = {
+  anthropic: { id:'anthropic', name:'Claude', icon:'✦', color:'#D97706',
+    models:['claude-sonnet-4-20250514','claude-haiku-4-5-20250929','claude-opus-4-0-20250514'] },
+  openai: { id:'openai', name:'GPT', icon:'◈', color:'#10A37F',
+    models:['gpt-4o','gpt-4o-mini','gpt-4-turbo','o1-mini'] },
+  gemini: { id:'gemini', name:'Gemini', icon:'◆', color:'#4285F4',
+    models:['gemini-2.0-flash','gemini-1.5-pro','gemini-1.5-flash'] }
+};
+
+const TONES = {
+  professional: { zh:'專業正式', en:'Professional', emoji:'👔' },
+  friendly: { zh:'親切友善', en:'Friendly', emoji:'😊' },
+  firm: { zh:'堅定立場', en:'Firm', emoji:'💪' },
+  empathetic: { zh:'同理關懷', en:'Empathetic', emoji:'🤝' },
+  concise: { zh:'簡潔扼要', en:'Concise', emoji:'⚡' },
+  diplomatic: { zh:'圓融外交', en:'Diplomatic', emoji:'🕊️' }
+};
+
+const LENGTHS = {
+  short:  { zh:'短', en:'Short',  emoji:'🔹', desc_zh:'3-5 句，直接切入重點', desc_en:'3-5 sentences, straight to the point' },
+  medium: { zh:'中', en:'Medium', emoji:'🔸', desc_zh:'1-2 段，適度說明',      desc_en:'1-2 paragraphs, moderate detail' },
+  long:   { zh:'長', en:'Long',   emoji:'🔶', desc_zh:'完整詳細，逐點回應',    desc_en:'Full detail, address each point' }
+};
+
+let state = {
+  keys: JSON.parse(localStorage.getItem('outlook-ai-keys') || '{}'),
+  activeProvider: 'anthropic',
+  lang: 'zh',
+  tone: 'professional',
+  replyLength: 'short',
+  emailContent: '',
+  showSettings: true,
+  loading: false,
+  mode: 'unknown',
+  lastReplyText: ''
+};
+
+// ============================================================
+// Office.js - 偵測模式 + 讀取郵件
+// ============================================================
+Office.onReady(function(info) {
+  if (info.host === Office.HostType.Outlook) {
+    detectMode();
+  }
+});
+
+function detectMode() {
+  try {
+    const item = Office.context.mailbox.item;
+    if (!item) {
+      setMode('unknown');
+      return;
+    }
+
+    // 判斷是 Read 還是 Compose 模式
+    // Compose 模式下有 item.subject.setAsync 方法
+    if (typeof item.body.setAsync === 'function') {
+      setMode('compose');
+      readComposeEmail();
+    } else {
+      setMode('read');
+      readEmail();
+    }
+  } catch(e) {
+    setMode('fallback');
+    enableManualMode();
+  }
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  const badge = document.getElementById('modeBadge');
+  const zh = state.lang === 'zh';
+
+  switch(mode) {
+    case 'read':
+      badge.className = 'mode-badge read';
+      badge.textContent = zh ? '📖 閱讀模式' : '📖 Read Mode';
+      break;
+    case 'compose':
+      badge.className = 'mode-badge compose';
+      badge.textContent = zh ? '✏️ 撰寫模式 - 可直接插入' : '✏️ Compose - Insert Enabled';
+      break;
+    default:
+      badge.className = 'mode-badge';
+      badge.style.background = 'rgba(251,191,36,0.15)';
+      badge.style.color = '#fbbf24';
+      badge.textContent = zh ? '📝 手動模式' : '📝 Manual Mode';
+  }
+}
+
+// === 讀信模式：讀取郵件內容 ===
+function readEmail() {
+  const item = Office.context.mailbox.item;
+  item.body.getAsync(Office.CoercionType.Text, function(result) {
+    if (result.status === Office.AsyncResultStatus.Succeeded) {
+      state.emailContent = result.value;
+      document.getElementById('emailBody').textContent = result.value || (state.lang === 'zh' ? '（郵件為空）' : '(Empty)');
+    }
+  });
+}
+
+// === 撰寫/回覆模式：讀取原始引用郵件 ===
+function readComposeEmail() {
+  const item = Office.context.mailbox.item;
+
+  // 先嘗試讀取 body（回覆時會包含原始郵件引用）
+  item.body.getAsync(Office.CoercionType.Text, function(result) {
+    if (result.status === Office.AsyncResultStatus.Succeeded) {
+      let body = result.value || '';
+
+      // 回覆郵件通常包含 "From:" 或 "寄件者:" 的引用區塊
+      // 嘗試擷取原始郵件內容
+      let originalEmail = '';
+      const separators = [
+        /\n-{3,}\s*Original Message\s*-{3,}/i,
+        /\nFrom:/i,
+        /\n寄件者:/i,
+        /\n-----/,
+        /\nOn .+ wrote:/i,
+        /\n在 .+ 撰寫:/i,
+      ];
+
+      for (const sep of separators) {
+        const match = body.search(sep);
+        if (match > -1) {
+          originalEmail = body.substring(match);
+          break;
+        }
+      }
+
+      state.emailContent = originalEmail || body;
+      document.getElementById('emailBody').textContent = state.emailContent || (state.lang === 'zh' ? '（未偵測到原始郵件，請手動貼上）' : '(No original email detected)');
+    }
+  });
+}
+
+// === 插入回覆到郵件正文 ===
+function insertReplyToEmail(text) {
+  if (state.mode !== 'compose') return;
+
+  const item = Office.context.mailbox.item;
+  // 在游標位置或郵件開頭插入
+  item.body.prependAsync(
+    text + '\n\n',
+    { coercionType: Office.CoercionType.Text },
+    function(result) {
+      if (result.status === Office.AsyncResultStatus.Succeeded) {
+        showSuccess(state.lang === 'zh' ? '✅ 已插入回覆到郵件！' : '✅ Reply inserted into email!');
+      } else {
+        showError(state.lang === 'zh' ? '插入失敗，請手動複製' : 'Insert failed, please copy manually');
+      }
+    }
+  );
+}
+
+// === Fallback 手動模式 ===
+function enableManualMode() {
+  const el = document.getElementById('emailBody');
+  el.textContent = state.lang === 'zh'
+    ? '⚠️ 未在 Outlook 環境中。請手動貼上郵件內容：'
+    : '⚠️ Not in Outlook. Paste email content here:';
+  el.setAttribute('contenteditable', 'true');
+  el.style.minHeight = '100px';
+  el.style.border = '1px dashed rgba(14,165,233,0.3)';
+  el.style.padding = '10px';
+  el.style.cursor = 'text';
+  el.addEventListener('input', function() {
+    state.emailContent = this.textContent;
+  });
+}
+
+function refreshEmail() { detectMode(); }
+
+// ============================================================
+// API Calls (same as before)
+// ============================================================
+function buildSystemPrompt() {
+  const toneLabel = state.lang === 'zh' ? TONES[state.tone].zh : TONES[state.tone].en;
+  const lenData = LENGTHS[state.replyLength];
+  const lenLabel = state.lang === 'zh' ? lenData.desc_zh : lenData.desc_en;
+
+  if (state.lang === 'zh') {
+    return `你是一位專業的企業郵件回覆助手。請分析以下來信內容，理解對方的問題和需求，然後用「${toneLabel}」的語氣，以繁體中文撰寫一封回覆郵件。
+
+⚠️ 長度要求：${lenLabel}。嚴格遵守此長度限制，回覆郵件正文不可超過此範圍。
+
+規則：
+1. 先用 1 句話摘要來信重點
+2. 識別需要回應的關鍵問題（簡短列出）
+3. 撰寫回覆郵件（包含稱呼、正文、結尾），長度嚴格控制在「${lenData.zh}」
+
+請用以下格式輸出：
+【來信摘要】
+（1 句話摘要）
+
+【關鍵問題】
+（簡短列出）
+
+【建議回覆】
+（完整回覆郵件內容，嚴格遵守長度要求）`;
+  }
+  return `You are a professional email reply assistant. Analyze the incoming email, understand the sender's issues and needs, then compose a reply in a "${toneLabel}" tone in English.
+
+⚠️ LENGTH REQUIREMENT: ${lenLabel}. Strictly follow this length constraint for the reply email body.
+
+Rules:
+1. Summarize key points in 1 sentence
+2. List key issues briefly
+3. Write the reply email (greeting, body, closing), strictly "${lenData.en}" length
+
+Output format:
+【Email Summary】
+(1 sentence)
+
+【Key Issues】
+(brief list)
+
+【Suggested Reply】
+(full reply email, strictly follow length requirement)`;
+}
+
+async function callAPI(provider, key, model, systemPrompt, userMsg) {
+  switch(provider) {
+    case 'anthropic': {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST',
+        headers: {
+          'Content-Type':'application/json',
+          'x-api-key': key,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body: JSON.stringify({ model, max_tokens:2048, system:systemPrompt, messages:[{role:'user',content:userMsg}] })
+      });
+      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || 'API error: '+res.status); }
+      const data = await res.json();
+      return data.content?.map(b=>b.text).join('\n') || '';
+    }
+    case 'openai': {
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method:'POST',
+        headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+key },
+        body: JSON.stringify({ model, max_tokens:2048, messages:[{role:'system',content:systemPrompt},{role:'user',content:userMsg}] })
+      });
+      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || 'API error: '+res.status); }
+      const data = await res.json();
+      return data.choices?.[0]?.message?.content || '';
+    }
+    case 'gemini': {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+      const res = await fetch(url, {
+        method:'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({
+          system_instruction:{parts:[{text:systemPrompt}]},
+          contents:[{parts:[{text:userMsg}]}],
+          generationConfig:{maxOutputTokens:2048}
+        })
+      });
+      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || 'API error: '+res.status); }
+      const data = await res.json();
+      return data.candidates?.[0]?.content?.parts?.map(p=>p.text).join('\n') || '';
+    }
+  }
+}
+
+async function generateReply() {
+  const emailContent = state.emailContent || document.getElementById('emailBody').textContent;
+  if (!emailContent.trim() || emailContent.includes('未在 Outlook') || emailContent.includes('正在讀取')) {
+    showError(state.lang === 'zh' ? '請先貼上或讀取郵件內容' : 'Please load or paste email content first');
+    return;
+  }
+
+  const keyData = state.keys[state.activeProvider];
+  if (!keyData?.key) {
+    showError(state.lang === 'zh' ? '請先設定 API Key' : 'Please set up API Key first');
+    return;
+  }
+
+  state.loading = true;
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  btn.textContent = state.lang === 'zh' ? '⏳ AI 分析中...' : '⏳ Generating...';
+  btn.classList.add('loading');
+  hideError();
+  hideSuccess();
+
+  const systemPrompt = buildSystemPrompt();
+  let userMsg = emailContent.trim();
+  const ctx = document.getElementById('contextInput').value.trim();
+  if (ctx) userMsg += '\n\n---\n' + (state.lang==='zh'?'額外指示':'Additional Context') + ': ' + ctx;
+
+  try {
+    const result = await callAPI(state.activeProvider, keyData.key, keyData.model, systemPrompt, userMsg);
+    renderResponse(result);
+  } catch(err) {
+    showError(err.message);
+  } finally {
+    state.loading = false;
+    btn.disabled = false;
+    btn.textContent = state.lang === 'zh' ? '🚀 產生回覆' : '🚀 Generate Reply';
+    btn.classList.remove('loading');
+  }
+}
+
+// ============================================================
+// UI
+// ============================================================
+function renderProviderTabs() {
+  document.getElementById('providerTabs').innerHTML = Object.values(PROVIDERS).map(p => `
+    <button class="provider-tab ${state.activeProvider===p.id?'active':''}"
+            style="--active-color:${p.color}; --active-bg:${p.color}15"
+            onclick="selectProvider('${p.id}')">
+      <span style="font-size:15px">${p.icon}</span>
+      <span>${p.name}</span>
+      ${state.keys[p.id]?.key ? '<span class="dot"></span>' : ''}
+    </button>
+  `).join('');
+}
+
+function renderModelSelect() {
+  const provider = PROVIDERS[state.activeProvider];
+  const select = document.getElementById('modelSelect');
+  select.innerHTML = provider.models.map(m => `<option value="${m}" style="background:#1e293b">${m}</option>`).join('');
+  const keyData = state.keys[state.activeProvider];
+  if (keyData) {
+    select.value = keyData.model || provider.models[0];
+    document.getElementById('apiKeyInput').value = keyData.key || '';
+    document.getElementById('labelInput').value = keyData.label || '';
+    document.getElementById('deleteBtn').style.display = 'inline-block';
+  } else {
+    document.getElementById('apiKeyInput').value = '';
+    document.getElementById('labelInput').value = '';
+    document.getElementById('deleteBtn').style.display = 'none';
+  }
+}
+
+function renderToneChips() {
+  document.getElementById('toneChips').innerHTML = Object.entries(TONES).map(([key, val]) => `
+    <button class="tone-chip ${state.tone===key?'active':''}" onclick="selectTone('${key}')">
+      ${val.emoji} ${state.lang==='zh'?val.zh:val.en}
+    </button>
+  `).join('');
+}
+
+function renderLengthBar() {
+  document.getElementById('lengthBar').innerHTML = Object.entries(LENGTHS).map(([key, val]) => `
+    <div class="length-seg ${state.replyLength===key?'active':''}" onclick="selectLength('${key}')">
+      <span class="seg-emoji">${val.emoji}</span>
+      <span class="seg-label">${state.lang==='zh'?val.zh:val.en}</span>
+      <span class="seg-desc">${state.lang==='zh'?val.desc_zh:val.desc_en}</span>
+    </div>
+  `).join('');
+}
+
+function renderSavedKeys() {
+  document.getElementById('savedKeys').innerHTML = Object.entries(state.keys).map(([pid, data]) => `
+    <span class="saved-key-badge" style="background:${PROVIDERS[pid].color}20; color:${PROVIDERS[pid].color}; border-color:${PROVIDERS[pid].color}40">
+      ${PROVIDERS[pid].icon} ${data.label || PROVIDERS[pid].name} • ${data.model}
+    </span>
+  `).join('');
+}
+
+function renderResponse(text) {
+  const sections = text.split(/【(.+?)】/).filter(Boolean);
+  const parsed = [];
+  for (let i = 0; i < sections.length; i += 2) {
+    if (sections[i+1]) parsed.push({ title: sections[i], content: sections[i+1].trim() });
+  }
+
+  const area = document.getElementById('responseArea');
+  if (parsed.length === 0) {
+    area.innerHTML = `<div class="response-section"><div class="response-body">${escapeHtml(text)}</div></div>`;
+    state.lastReplyText = text;
+    showInsertButton();
+    return;
+  }
+
+  // 找出回覆區塊
+  let replyContent = '';
+  area.innerHTML = parsed.map(s => {
+    const isReply = s.title.includes('回覆') || s.title.includes('Reply');
+    if (isReply) replyContent = s.content;
+    return `
+      <div class="response-section ${isReply?'reply':''}">
+        <div class="response-title ${isReply?'reply-title':''}">
+          <span style="color:${isReply?'var(--accent)':'var(--text-muted)'}">${escapeHtml(s.title)}</span>
+          ${isReply ? `<button class="btn-copy" onclick="copyText(this)">${state.lang==='zh'?'📋 複製':'📋 Copy'}</button>` : ''}
+        </div>
+        <div class="response-body">${escapeHtml(s.content)}</div>
+      </div>
+    `;
+  }).join('');
+
+  state.lastReplyText = replyContent || text;
+  showInsertButton();
+}
+
+function showInsertButton() {
+  const insertArea = document.getElementById('insertArea');
+  if (state.mode === 'compose' && state.lastReplyText) {
+    const zh = state.lang === 'zh';
+    insertArea.style.display = 'block';
+    insertArea.innerHTML = `
+      <button class="btn-insert" onclick="doInsert()">
+        📥 ${zh ? '直接插入到郵件回覆' : 'Insert into Email Reply'}
+      </button>
+      <div style="text-align:center;margin-top:4px;font-size:11px;color:var(--text-muted)">
+        ${zh ? '點擊後 AI 建議的回覆會自動填入郵件正文' : 'AI reply will be inserted at the top of your email'}
+      </div>
+    `;
+  } else {
+    insertArea.style.display = 'none';
+  }
+}
+
+function doInsert() {
+  if (state.lastReplyText) {
+    insertReplyToEmail(state.lastReplyText);
+  }
+}
+
+// ============================================================
+// Actions
+// ============================================================
+function selectProvider(id) {
+  state.activeProvider = id;
+  renderProviderTabs(); renderModelSelect(); renderSavedKeys();
+}
+
+function selectTone(tone) { state.tone = tone; renderToneChips(); }
+
+function selectLength(len) { state.replyLength = len; renderLengthBar(); }
+
+function setLang(lang) {
+  state.lang = lang;
+  document.querySelectorAll('.lang-toggle button').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.lang-toggle button:${lang==='zh'?'first':'last'}-child`).classList.add('active');
+  renderToneChips();
+  renderLengthBar();
+  detectMode(); // refresh mode badge language
+}
+
+function toggleSettings() {
+  state.showSettings = !state.showSettings;
+  const panel = document.getElementById('settingsPanel');
+  panel.className = 'collapsible ' + (state.showSettings ? 'expanded' : 'collapsed');
+  document.getElementById('settingsBtn').classList.toggle('active', state.showSettings);
+}
+
+function saveKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) return;
+  state.keys[state.activeProvider] = {
+    key,
+    model: document.getElementById('modelSelect').value,
+    label: document.getElementById('labelInput').value.trim()
+  };
+  localStorage.setItem('outlook-ai-keys', JSON.stringify(state.keys));
+  renderProviderTabs(); renderSavedKeys();
+  document.getElementById('deleteBtn').style.display = 'inline-block';
+}
+
+function removeKey() {
+  delete state.keys[state.activeProvider];
+  localStorage.setItem('outlook-ai-keys', JSON.stringify(state.keys));
+  renderProviderTabs(); renderModelSelect(); renderSavedKeys();
+}
+
+function showError(msg) { const el = document.getElementById('errorBox'); el.textContent = '⚠️ ' + msg; el.style.display = 'block'; }
+function hideError() { document.getElementById('errorBox').style.display = 'none'; }
+function showSuccess(msg) { const el = document.getElementById('successBox'); el.textContent = msg; el.style.display = 'block'; setTimeout(() => { el.style.display = 'none'; }, 3000); }
+function hideSuccess() { document.getElementById('successBox').style.display = 'none'; }
+
+function copyText(btn) {
+  const text = btn.parentElement.nextElementSibling.textContent;
+  const orig = btn.textContent;
+
+  // Method 1: Modern Clipboard API
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '✅';
+      setTimeout(() => { btn.textContent = orig; }, 1500);
+    }).catch(() => {
+      fallbackCopy(text, btn, orig);
+    });
+  } else {
+    fallbackCopy(text, btn, orig);
+  }
+}
+
+function fallbackCopy(text, btn, orig) {
+  // Method 2: execCommand fallback for iframe / restricted environments
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.left = '-9999px';
+  textarea.style.top = '-9999px';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+
+  try {
+    const ok = document.execCommand('copy');
+    if (ok) {
+      btn.textContent = '✅';
+      setTimeout(() => { btn.textContent = orig; }, 1500);
+    } else {
+      // Method 3: Select + prompt user
+      promptManualCopy(text, btn, orig);
+    }
+  } catch(e) {
+    promptManualCopy(text, btn, orig);
+  }
+  document.body.removeChild(textarea);
+}
+
+function promptManualCopy(text, btn, orig) {
+  // Last resort: show text in a selectable popup
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;';
+  
+  const label = document.createElement('div');
+  label.textContent = state.lang === 'zh' ? '請按 Ctrl+A 全選，再按 Ctrl+C 複製：' : 'Press Ctrl+A then Ctrl+C to copy:';
+  label.style.cssText = 'color:#38bdf8;font-size:13px;margin-bottom:10px;font-weight:600;';
+  
+  const box = document.createElement('textarea');
+  box.value = text;
+  box.style.cssText = 'width:90%;max-height:60vh;padding:12px;background:#1e293b;color:#e2e8f0;border:1px solid rgba(14,165,233,0.4);border-radius:10px;font-size:12px;line-height:1.6;resize:none;font-family:"Noto Sans TC",sans-serif;';
+  box.readOnly = false;
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = state.lang === 'zh' ? '✕ 關閉' : '✕ Close';
+  closeBtn.style.cssText = 'margin-top:10px;padding:8px 20px;background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid rgba(239,68,68,0.3);border-radius:8px;cursor:pointer;font-size:13px;';
+  closeBtn.onclick = () => { document.body.removeChild(overlay); };
+  
+  overlay.appendChild(label);
+  overlay.appendChild(box);
+  overlay.appendChild(closeBtn);
+  document.body.appendChild(overlay);
+  
+  box.focus();
+  box.select();
+  
+  btn.textContent = orig;
+}
+
+function escapeHtml(text) {
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+// Init
+renderProviderTabs();
+renderModelSelect();
+renderToneChips();
+renderLengthBar();
+renderSavedKeys();
+</script>
+</body>
+</html>
